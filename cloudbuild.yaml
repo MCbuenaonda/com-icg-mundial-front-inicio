@@ -9,8 +9,8 @@ steps:
 
 # Substitution variables
 substitutions:
-  _REPO_NAME: 'com-icg-mundial-front-usuario'  # Replace with your Artifact Registry repository name
-  _IMAGE_NAME: 'com-icg-mundial-front-usuario'      # Replace with your desired image name
+  _REPO_NAME: 'com-icg-mundial-front-inicio'  # Replace with your Artifact Registry repository name
+  _IMAGE_NAME: 'com-icg-mundial-front-inicio'      # Replace with your desired image name
   TAG_NAME: 'latest'                           # Default tag, can be overridden
 
 options:
