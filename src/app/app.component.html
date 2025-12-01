@@ -1,0 +1,351 @@
+<!-- Dashboard Top -->
+<div class="row g-4 mb-4">
+	<div class="col-12 col-md-5">
+		<div class="card h-100">
+			<div class="card-header bg-info text-white">Estado del Torneo</div>
+			<div class="card-body">
+				<div><strong>Fase Actual:</strong> {{ currentPhase }}</div>
+				<div><strong>Países Clasificados:</strong> {{ qualifiedCount }}</div>
+				<div><strong>Próximo Evento:</strong> {{ nextEvent }}</div>
+			</div>
+		</div>
+	</div>
+	<div class="col-12 col-md-7" *ngIf="liveMatch">
+		<div class="card h-100 border-live">
+			<div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+				<span>Partido en Curso</span>
+				<span class="live-badge">🔴 LIVE</span>
+			</div>
+			<div class="card-body live-card-body">
+        <!-- Animación de GOL -->
+        <div *ngIf="mostrarAnimacionGol" class="gol-celebration">
+          <div class="gol-explosion">
+            <div class="gol-text">⚽ ¡GOOOOOL! ⚽</div>
+            <div class="gol-equipo">{{ equipoQueAnoto }}</div>
+            <div class="gol-jugador">{{ jugadorQueAnoto }}</div>
+            <div class="confetti">
+              <div class="confetti-piece" *ngFor="let i of [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Animación de Tarjeta Amarilla -->
+        <div *ngIf="mostrarAnimacionTarjetaAmarilla" class="tarjeta-amarilla-celebration">
+          <div class="tarjeta-explosion">
+            <div class="tarjeta-icono">🟨</div>
+            <div class="tarjeta-text">¡TARJETA AMARILLA!</div>
+            <div class="tarjeta-equipo">{{ equipoAccion }}</div>
+            <div class="tarjeta-jugador">{{ jugadorAccion }}</div>
+          </div>
+        </div>
+
+        <!-- Animación de Tarjeta Roja -->
+          <div *ngIf="mostrarAnimacionTarjetaRoja" class="tarjeta-roja-celebration">
+            <div class="tarjeta-explosion">
+              <div class="tarjeta-icono">🟥</div>
+              <div class="tarjeta-text">¡TARJETA ROJA!</div>
+              <div class="tarjeta-equipo">{{ equipoAccion }}</div>
+              <div class="tarjeta-jugador">{{ jugadorAccion }}</div>
+              <div class="expulsion-text">EXPULSIÓN</div>
+            </div>
+          </div>
+
+          <!-- Animación de Revisión VAR -->
+          <div *ngIf="mostrarAnimacionVAR" class="var-celebration">
+            <div class="var-explosion">
+              <div class="var-icono">📺</div>
+              <div class="var-text">REVISIÓN VAR</div>
+              <div class="var-mensaje">El árbitro revisa la jugada...</div>
+              <div class="var-loader">
+                <div class="var-dot"></div>
+                <div class="var-dot"></div>
+                <div class="var-dot"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Animación de Cambio -->
+          <div *ngIf="mostrarAnimacionCambio" class="cambio-celebration">
+            <div class="cambio-explosion">
+              <div class="cambio-icono">🔄</div>
+              <div class="cambio-text">CAMBIO</div>
+              <div class="cambio-equipo">{{ equipoAccion }}</div>
+              <div class="cambio-jugadores">
+                <div class="jugador-sale">
+                  <span class="sale-icono">🔻</span>
+                  <span>{{ jugadorSale }}</span>
+                </div>
+                <div class="jugador-entra">
+                  <span class="entra-icono">🔺</span>
+                  <span>{{ jugadorEntra }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Animación de Lesión -->
+          <div *ngIf="mostrarAnimacionLesion" class="lesion-celebration">
+            <div class="lesion-explosion">
+              <div class="lesion-icono">🚑</div>
+              <div class="lesion-text">¡LESIÓN!</div>
+              <div class="lesion-equipo">{{ equipoAccion }}</div>
+              <div class="lesion-jugador">{{ jugadorAccion }}</div>
+              <div class="lesion-mensaje">Atención médica requerida</div>
+            </div>
+          </div>
+
+
+        <div class="text-center mb-3">
+          <div class="minuto-live animate__animated animate__pulse animate__infinite">{{ minuto_en_vivo || 'En vivo' }}'</div>
+        </div>
+				<div class="d-flex justify-content-between align-items-center">
+					<div class="d-flex align-items-center">
+						<img [src]="getBanderaUrl(liveMatch.equipo_local.iso)" alt="{{ liveMatch.equipo_local.nombre }}" height="32" class="flag-img">
+						<span class="mx-2 fw-bold">{{ liveMatch.equipo_local.nombre }}</span>
+					</div>
+            <div class="fs-4 fw-bold">{{ detalle_en_curso.goles_local }} - {{ detalle_en_curso.goles_visitante }}</div>
+            <div class="d-flex align-items-center">
+              <span class="mx-2 fw-bold">{{ liveMatch.equipo_visitante.nombre }}</span>
+              <img [src]="getBanderaUrl(liveMatch.equipo_visitante.iso)" alt="{{ liveMatch.equipo_visitante.nombre }}" height="32" class="flag-img">
+            </div>
+				</div>
+
+				<div *ngIf="detalle_en_curso.acciones && detalle_en_curso.acciones.length > 0" class="timeline-acciones">
+            <!-- <h4 class="timeline-title text-light">📋 Última Acción</h4> -->
+            
+            <div class="acciones-container animate__animated animate__fadeInUp">
+              <div 
+                *ngFor="let accion of getUltimasAcciones(1); let i = index" 
+                class="accion-item animate__animated animate__slideInLeft"
+                [ngClass]="'importancia-' + accion.importancia"
+                [class.accion-nueva]="i === 0">
+                
+                <div class="accion-contenido">
+                  <div class="accion-header">
+                    <span class="accion-tipo" [ngClass]="'tipo-' + getTipoClass(accion.tipo)">
+                      {{ getTipoIcon(accion.tipo) }} {{ accion.tipo }} de 
+                    </span>
+                    <span class="accion-equipo">{{ accion.equipo }}</span>
+                  </div>                  
+                  <div class="accion-descripcion">{{ accion.descripcion }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+				<div class="d-flex gap-2 mt-2">
+					<a class="btn btn-outline-success flex-fill text-light" [routerLink]="['/mf-get-juego', liveMatch._id]">Ver Detalle del Partido</a>
+					<button class="btn btn-outline-warning flex-fill" (click)="scrollToGroups(liveMatch.confederacion_id, liveMatch.grupo)">📊 Ver Grupos</button>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- Resultados y Próximos Partidos -->
+<div class="row g-4 mb-4">
+	   <div class="col-12 col-md-6">
+		   <div class="card h-100 shadow-sm">
+			   <div class="card-header bg-secondary text-white">Resultados Recientes</div>
+			   <ul class="list-group list-group-flush resultados-list">
+				   <li class="list-group-item py-3 px-2 d-flex align-items-center justify-content-between" *ngFor="let match of recentResults">
+					   <div class="d-flex align-items-center gap-2">
+						   <span class="fecha-badge me-2">{{ match.fecha | fechaEs }}</span>
+						   <img [src]="getBanderaUrl(match.equipo_local.iso)" [alt]="match.equipo_local.nombre" height="24" class="flag-img">
+						   <span class="fw-bold text-light">{{ match.equipo_local.nombre }}</span>
+					   </div>
+					   <div class="score-box mx-2 px-2 py-1 rounded bg-dark text-warning fw-bold fs-5">{{ match.resultado.goles_local }} - {{ match.resultado.goles_visitante }}</div>
+					   <div class="d-flex align-items-center gap-2">
+						   <span class="fw-bold text-light">{{ match.equipo_visitante.nombre }}</span>
+						   <img [src]="getBanderaUrl(match.equipo_visitante.iso)" [alt]="match.equipo_visitante.nombre" height="24" class="flag-img">
+					   </div>
+				   </li>
+			   </ul>
+		   </div>
+	   </div>
+	   <div class="col-12 col-md-6">
+		   <div class="card h-100 shadow-sm">
+			   <div class="card-header bg-warning">Próximos Partidos</div>
+			   <ul class="list-group list-group-flush resultados-list">
+				   <li class="list-group-item py-3 px-2 d-flex align-items-center justify-content-between" *ngFor="let match of upcomingMatches">
+					   <div class="d-flex align-items-center gap-2">
+						   <span class="fecha-badge me-2">{{ match.fecha | fechaEs }} {{ match.hora }}</span>
+						   <img [src]="getBanderaUrl(match.equipo_local.iso)" [alt]="match.equipo_local.nombre" height="24" class="flag-img">
+						   <span class="fw-bold text-light">{{ match.equipo_local.nombre }}</span>
+					   </div>
+					   <div class="score-box mx-2 px-2 py-1 rounded bg-warning text-dark fw-bold fs-6">vs</div>
+					   <div class="d-flex align-items-center gap-2">
+						   <span class="fw-bold text-light">{{ match.equipo_visitante.nombre }}</span>
+						   <img [src]="getBanderaUrl(match.equipo_visitante.iso)" [alt]="match.equipo_visitante.nombre" height="24" class="flag-img">
+						   <span class="ms-2 text-info fw-semibold"><i class="bi bi-geo-alt-fill"></i> {{ match.ubicacion.estadio }}</span>
+					   </div>
+				   </li>
+			   </ul>
+		   </div>
+	   </div>
+</div>
+
+<!-- Tabs de Visualización del Torneo -->
+<ul class="nav nav-tabs mb-3" id="torneoTabs" role="tablist">
+	<li class="nav-item" role="presentation">
+		<button class="nav-link active" id="grupos-tab" data-bs-toggle="tab" data-bs-target="#grupos" type="button" role="tab" aria-controls="grupos" aria-selected="true">Clasificación de Grupos</button>
+	</li>
+	<li class="nav-item" role="presentation">
+		<button class="nav-link" id="eliminatorias-tab" data-bs-toggle="tab" data-bs-target="#eliminatorias" type="button" role="tab" aria-controls="eliminatorias" aria-selected="false">Eliminatorias</button>
+	</li>
+	<li class="nav-item" role="presentation">
+		<button class="nav-link" id="jugadores-tab" data-bs-toggle="tab" data-bs-target="#jugadores" type="button" role="tab" aria-controls="jugadores" aria-selected="false">Mejores Jugadores</button>
+	</li>
+</ul>
+<div class="tab-content" id="torneoTabsContent">
+	<div class="tab-pane fade show active" id="grupos" role="tabpanel" aria-labelledby="grupos-tab">
+		<div *ngIf="groupsInfo.length; else noGroups">
+			<div class="row g-3">
+				<ng-container *ngFor="let conf of groupsInfo">
+					<div class="col-12">
+            <hr>
+						<h6 class="text-light mb-2">Confederación: {{ conf.confederacion_id | nombreConfederacion }}</h6>
+					</div>
+					<ng-container *ngFor="let entry of conf.grupos | keyvalue">
+						<div class="col-12 col-md-3" id="confederacion-{{ conf.confederacion_id }}-{{entry.key}}">
+							<div class="card h-100">
+								<div class="card-header bg-light">{{ entry.key }}</div>
+								<div class="card-body p-2">
+									<table class="table table-sm mb-0">
+										<thead>
+											<tr>
+												<th>Pos</th>
+												<th>País</th>
+												<th>PJ</th>
+												<th>G</th>
+												<th>E</th>
+												<th>P</th>
+												<th>Pts</th>
+												<th>GF-GC</th>
+											</tr>
+										</thead>
+									<tbody>
+										<tr *ngFor="let team of getSortedTeams(conf.grupos, entry.key); let i = index" [class.team-playing]="isTeamPlaying(team.nombre)">
+											<td>{{ i + 1 }}</td>
+											<td class="d-flex align-items-center gap-2">
+												<img [src]="getBanderaUrl(team.iso)" height="18" class="flag-img-table"> 
+												<span class="fw-bold">{{ team.siglas || team.nombre }}</span>
+												<button *ngIf="isTeamPlaying(team.nombre)" class="live-indicator-btn ms-2" (click)="scrollToLive()" title="Ver partido en vivo">
+													🔴 LIVE
+												</button>
+											</td>
+												<td>{{ team.jj || team.juegos || 0 }}</td>
+												<td>{{ team.jg || 0 }}</td>
+												<td>{{ team.je || 0 }}</td>
+												<td>{{ team.jp || 0 }}</td>
+												<td>{{ team.puntos || 0 }}</td>
+												<td>{{ team.gf || 0 }}-{{ team.gc || 0 }}</td>
+											</tr>
+										</tbody>
+									</table>
+								</div>
+							</div>
+						</div>
+					</ng-container>
+				</ng-container>
+			</div>
+		</div>
+		<ng-template #noGroups>
+			<div class="p-3 text-center text-muted">Cargando grupos...</div>
+		</ng-template>
+	</div>
+	<div class="tab-pane fade" id="eliminatorias" role="tabpanel" aria-labelledby="eliminatorias-tab">
+		<div class="accordion" id="confederacionesAccordion">
+			<div class="accordion-item" *ngFor="let conf of ['UEFA','CONMEBOL','CONCACAF','CAF','OFC','AFC']; let i = index">
+				<h2 class="accordion-header" id="heading{{i}}">
+					<button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" [attr.data-bs-target]="'#collapse' + i" aria-expanded="false" [attr.aria-controls]="'collapse' + i">
+						{{ conf }}
+					</button>
+				</h2>
+				<div id="collapse{{i}}" class="accordion-collapse collapse" [attr.aria-labelledby]="'heading' + i" data-bs-parent="#confederacionesAccordion">
+					<div class="accordion-body">
+						<table class="table table-sm mb-0">
+							<thead>
+								<tr>
+									<th>Pos</th>
+									<th>País</th>
+									<th>Pts</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr *ngFor="let pos of [1,2,3,4]">
+									<td>{{ pos }}</td>
+									<td><img [src]="getBanderaUrl('MX')" height="18">BRA</td>
+									<td>9</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="tab-pane fade" id="jugadores" role="tabpanel" aria-labelledby="jugadores-tab">
+		<div class="row g-3">
+			<div class="col-12 col-md-6">
+				<div class="card">
+					<div class="card-header bg-light">Máximos Goleadores</div>
+					<div class="card-body p-2">
+						<table class="table table-sm mb-0">
+							<thead>
+								<tr>
+									<th>Jugador</th>
+									<th>País</th>
+									<th>Goles</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr *ngFor="let player of playerStats | slice:0:10">
+									<td>{{ player.player }}</td>
+									<td><img [src]="player.country.flagUrl" height="18"> {{ player.country.name }}</td>
+									<td>{{ player.goals }}</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+				</div>
+			</div>
+			<div class="col-12 col-md-6">
+				<div class="card">
+					<div class="card-header bg-light">Máximos Asistidores</div>
+					<div class="card-body p-2">
+						<table class="table table-sm mb-0">
+							<thead>
+								<tr>
+									<th>Jugador</th>
+									<th>País</th>
+									<th>Asistencias</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr *ngFor="let player of playerStats | slice:0:10">
+									<td>{{ player.player }}</td>
+									<td><img [src]="player.country.flagUrl" height="18"> {{ player.country.name }}</td>
+									<td>{{ player.assists }}</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- Footer -->
+<footer class="footer mt-5 py-3 text-center">
+	<div>Simulación Copa del Mundo 2026 &copy; 2025 | Desarrollado por MCbuenaonda</div>
+</footer>
+
+<!-- Botón flotante scroll to top -->
+<button 
+	*ngIf="showScrollButton" 
+	class="scroll-to-top-btn animate__animated animate__fadeInUp" 
+	(click)="scrollToTop()"
+	title="Volver arriba">
+	<span class="arrow-up">⬆</span>
+</button>
