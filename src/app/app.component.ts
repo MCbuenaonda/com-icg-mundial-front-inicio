@@ -41,6 +41,7 @@ export class AppComponent implements OnInit {
   liveMatch?: any;
   recentResults: Partido[] = [];
   upcomingMatches: Partido[] = [];
+  estado_torneo: any = null;
 
   minuto_en_vivo: number = 0;
   mensajeTiempo: string = '';
@@ -122,10 +123,14 @@ export class AppComponent implements OnInit {
   obtener_juegos(): void {
     this.apiService.obtenerJuegos().subscribe({
       next: (data: any) => {
+        console.log('data_obtener_juegos', data);
+        
         this.recentResults = data.ultimos_partidos;
         this.upcomingMatches = data.proximos_partidos;
         this.dataliveMatch = data.partido_en_vivo;
+        this.estado_torneo = data.estado_del_torneo;
         this.cargarDetallesPartido(this.dataliveMatch._id);
+        this.setDashboardData(this.estado_torneo);
         console.log('Juegos finalizados obtenidos:', this.recentResults);
       },
       error: (error: any) => {
@@ -147,9 +152,11 @@ export class AppComponent implements OnInit {
     });
   }
 
-  setDashboardData(): void {
-    this.currentPhase = 'Eliminatorias - CONMEBOL';
-    this.qualifiedCount = '28/48 Plazas Cubiertas';
+  setDashboardData(estado_torneo: any = null): void {
+    console.log('estado torneo', estado_torneo);    
+    this.currentPhase = estado_torneo ? estado_torneo.fase_actual : 'Fase de Grupos';
+    const num_paises = estado_torneo ? estado_torneo.paises_clasificados : '0';
+    this.qualifiedCount = `0/${num_paises} Países Clasificados`;
     this.nextEvent = 'Sorteo de Grupos';
     //this.liveMatch = this.matches.find(m => m.status === 'live');
     // this.recentResults = this.matches.filter(m => m.status === 'finished').slice(-7).reverse();
