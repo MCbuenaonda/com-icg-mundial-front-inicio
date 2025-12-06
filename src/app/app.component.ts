@@ -86,8 +86,8 @@ export class AppComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.obtener_juegos();        
-    this.obtenerInformacionTorneo();    
+    this.obtener_juegos();
+    this.obtenerInformacionTorneo();
     this.obtenerGruposTorneo();
     this.setDashboardData();
   }
@@ -98,8 +98,27 @@ export class AppComponent implements OnInit {
   obtenerGruposTorneo(): void {
     this.apiService.obtenerGruposTorneo().subscribe({
       next: (data: any[]) => {
-        // data es un array de confederaciones con objeto 'grupos'
-        this.groupsInfo = data || [];
+        this.groupsInfo = [];        // data es un array de confederaciones con objeto 'grupos'
+        const grupos = data;
+        grupos.forEach(element => {
+          // buscamos dentro de 'gruposInfo' si ya existe la confederación_id
+          const existingGroup = this.groupsInfo.find(g => g.confederacion_id === element.confederacion_id);
+          if (!existingGroup) {            
+            this.groupsInfo.push(element);
+          } else {
+            //obtenemos el objeto con el confederacion_id encontrado
+            const gruposExistentes = existingGroup.grupos;
+            // si 'element.fase_id' > 'existingGroup.fase_id', borramos el objeto del array 'this.groupsInfo' y agregamos el nuevo 'element' al array
+            if (element.fase_id > existingGroup.fase_id) {
+              const index = this.groupsInfo.indexOf(existingGroup);
+              if (index > -1) {
+                this.groupsInfo.splice(index, 1);
+              }
+              this.groupsInfo.push(element);
+            }
+          }
+        });
+        
         console.log('Grupos del torneo:', this.groupsInfo);
       },
       error: (err: any) => {
@@ -124,7 +143,7 @@ export class AppComponent implements OnInit {
     this.apiService.obtenerJuegos().subscribe({
       next: (data: any) => {
         console.log('data_obtener_juegos', data);
-        
+
         this.recentResults = data.ultimos_partidos;
         this.upcomingMatches = data.proximos_partidos;
         this.dataliveMatch = data.partido_en_vivo;
@@ -153,7 +172,7 @@ export class AppComponent implements OnInit {
   }
 
   setDashboardData(estado_torneo: any = null): void {
-    console.log('estado torneo', estado_torneo);    
+    console.log('estado torneo', estado_torneo);
     this.currentPhase = estado_torneo ? estado_torneo.fase_actual : 'Fase de Grupos';
     const num_paises = estado_torneo ? estado_torneo.paises_clasificados : '0';
     this.qualifiedCount = `0/${num_paises} Países Clasificados`;
@@ -173,7 +192,7 @@ export class AppComponent implements OnInit {
       next: (data: Partido) => {
         this.liveMatch = data;
         console.log('liveMatch', this.liveMatch);
-        
+
         this.minuto_en_vivo = data.resultado?.minuto || 0;
         console.log('Detalles del partido en vivo:', this.liveMatch);
         const array_tiempo_mensaje = this.liveMatch.tiempo_restante != null ? this.liveMatch.tiempo_restante.split('\n') : null;
@@ -193,11 +212,11 @@ export class AppComponent implements OnInit {
         let minutosRestantes = 0;
         let segundosRestantes = 0;
 
-        if (matchMinutos && matchMinutos[1]) {          
+        if (matchMinutos && matchMinutos[1]) {
           this.tiempo_restante = parseInt(matchMinutos[1], 10);
         }
 
-        if (matchSegundos && matchSegundos[1]) {          
+        if (matchSegundos && matchSegundos[1]) {
           // Extraer los segundos del texto
           segundosRestantes = parseInt(matchSegundos[1], 10);
           console.log('Segundos restantes:', segundosRestantes);
@@ -219,37 +238,37 @@ export class AppComponent implements OnInit {
           const num_acciones = accionesCompletas.length;
           const total_segundos = 1800; // 30 minutos * 60 segundos
           const milisegundos_por_accion = (total_segundos / num_acciones) * 1000;
-          console.log('segundos_por_accion', Math.round(milisegundos_por_accion));          
-          
+          console.log('segundos_por_accion', Math.round(milisegundos_por_accion));
+
           const segundos_restantes = total_segundos - ((this.tiempo_restante * 60) + segundosRestantes);
           const indice_max_acciones = Math.floor((segundos_restantes * num_acciones) / total_segundos);
-          
+
           // Obtener acciones a mostrar y faltantes SIN invertir
           const acciones_a_mostrar = accionesCompletas.slice(0, indice_max_acciones);
           this.acciones_faltantes = accionesCompletas.slice(indice_max_acciones, num_acciones);
-          
+
           console.log('Acciones faltantes:', this.acciones_faltantes);
           console.log('Acciones a mostrar inicialmente:', acciones_a_mostrar);
-          
+
           // Invertir solo las acciones a mostrar para que se vean de más reciente a más antigua
           this.acciones_en_vivo = [...acciones_a_mostrar].reverse();
-          
-          console.log('tiempo restante:', this.tiempo_restante);          
+
+          console.log('tiempo restante:', this.tiempo_restante);
           this.minuto_en_vivo = this.acciones_en_vivo.length > 0 ? this.acciones_en_vivo[0].minuto : 0;
-          
+
           // Establecer la acción actual para el campo
           this.accionActual = this.acciones_en_vivo.length > 0 ? this.acciones_en_vivo[0] : null;
-          
+
           // Calcular los goles reales basados en las acciones en vivo mostradas
           this.actualizarMarcadorEnVivo();
-          
-          console.log('Detalle en curso:', this.detalle_en_curso);          
+
+          console.log('Detalle en curso:', this.detalle_en_curso);
           console.log(`Acciones en vivo cargadas: ${this.acciones_en_vivo.length}`);
           console.log(`Minuto en vivo: ${this.minuto_en_vivo}`);
           console.log(`Marcador en vivo - Local: ${this.detalle_en_curso.goles_local}, Visitante: ${this.detalle_en_curso.goles_visitante}`);
-          
+
           // Iniciar animación de acciones
-          this.iniciarAnimacionAcciones(Math.round(milisegundos_por_accion));          
+          this.iniciarAnimacionAcciones(Math.round(milisegundos_por_accion));
         }
       },
       error: (error: any) => {
@@ -301,25 +320,25 @@ export class AppComponent implements OnInit {
       if (this.acciones_faltantes.length > 0) {
         // Tomar la primera acción de las faltantes (que está en orden cronológico)
         const nuevaAccion = this.acciones_faltantes.shift();
-        
+
         if (nuevaAccion) {
           // Insertar al inicio del array de acciones en vivo (para mostrar las más recientes primero)
           this.acciones_en_vivo.unshift(nuevaAccion);
-          
+
           // Actualizar la acción actual para la animación del campo
           this.accionActual = nuevaAccion;
-          
+
           // Actualizar el minuto en vivo con la acción más reciente (primera en el array)
           this.minuto_en_vivo = this.acciones_en_vivo[0].minuto;
-          
+
           // Mostrar animaciones especiales según el tipo de acción
           const tipoAccion = nuevaAccion.tipo.toLowerCase();
-          
+
           if (tipoAccion === 'gol') {
             this.actualizarMarcadorEnVivo();
             this.mostrarCelebracionGol(nuevaAccion);
-          // } else if (tipoAccion === 'atajada') {
-          //   this.mostrarAnimacionAtajada(nuevaAccion);
+            // } else if (tipoAccion === 'atajada') {
+            //   this.mostrarAnimacionAtajada(nuevaAccion);
           } else if (tipoAccion === 'tarjeta amarilla') {
             this.mostrarAnimacionTarjetaAmarillaFn(nuevaAccion);
           } else if (tipoAccion === 'tarjeta roja' || tipoAccion === 'tarjeta doble amarilla') {
@@ -331,10 +350,10 @@ export class AppComponent implements OnInit {
           } else if (tipoAccion === 'lesión') {
             this.mostrarAnimacionLesionFn(nuevaAccion);
           }
-          
+
           console.log(`Nueva acción agregada - Minuto: ${nuevaAccion.minuto}, Tipo: ${nuevaAccion.tipo}, Sector: ${nuevaAccion.sector}`);
           console.log(`Acciones restantes: ${this.acciones_faltantes.length}`);
-          
+
           // Forzar detección de cambios para actualizar la vista
           this.cdr.detectChanges();
         }
@@ -406,7 +425,7 @@ export class AppComponent implements OnInit {
     } else {
       this.equipoRecibioGol = 'local';
     }
-    
+
     // Mostrar balón en portería
     //this.mostrarBalonPorteria = true;
 
@@ -463,7 +482,7 @@ export class AppComponent implements OnInit {
     const descripcion = accion.descripcion || '';
     const salePart = descripcion.match(/Sale\s+([^,]+),/i);
     const entraPart = descripcion.match(/entra\s+([^(]+)\(/i);
-    
+
     this.jugadorSale = salePart ? salePart[1].trim() : accion.jugador;
     this.jugadorEntra = entraPart ? entraPart[1].trim() : '';
     this.mostrarAnimacionCambio = true;
@@ -487,8 +506,8 @@ export class AppComponent implements OnInit {
 
   isTeamPlaying(teamName: string): boolean {
     if (!this.liveMatch) return false;
-    return this.liveMatch.equipo_local?.nombre === teamName || 
-           this.liveMatch.equipo_visitante?.nombre === teamName;
+    return this.liveMatch.equipo_local?.nombre === teamName ||
+      this.liveMatch.equipo_visitante?.nombre === teamName;
   }
 
   scrollToGroups(confederacion_id: number, grupo: string): void {
