@@ -524,4 +524,158 @@ export class AppComponent implements OnInit {
   scrollToTop(): void {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
+
+  getIntensidadActual(): string {
+    if (!this.detalle_en_curso || !this.acciones_en_vivo) return 'SIN DATOS';
+    
+    const ultimasAcciones = this.acciones_en_vivo.slice(0, 5);
+    const pesoTotal = ultimasAcciones.reduce((sum, accion) => sum + this.getAccionPeso(accion.tipo), 0);
+    const pesoPromedio = pesoTotal / Math.max(ultimasAcciones.length, 1);
+    
+    if (pesoPromedio >= 3) return '🔥 ALTA';
+    if (pesoPromedio >= 2) return '⚡ MEDIA';
+    return '📊 NORMAL';
+  }
+
+  getAccionPeso(tipo: string): number {
+    const tipoLower = tipo.toLowerCase();
+    
+    // Pesos según importancia/emoción de la acción
+    if (tipoLower.includes('gol')) return 5;
+    if (tipoLower.includes('penal')) return 4.5;
+    if (tipoLower.includes('tarjeta roja')) return 4;
+    if (tipoLower.includes('var')) return 3.5;
+    if (tipoLower.includes('atajada')) return 3;
+    if (tipoLower.includes('tiro a puerta') || tipoLower.includes('tiro')) return 2.5;
+    if (tipoLower.includes('tarjeta amarilla')) return 2;
+    if (tipoLower.includes('falta')) return 1.5;
+    if (tipoLower.includes('corner') || tipoLower.includes('córner')) return 1.5;
+    if (tipoLower.includes('cambio')) return 1.2;
+    if (tipoLower.includes('lesión')) return 2;
+    if (tipoLower.includes('fuera de juego')) return 1;
+    if (tipoLower.includes('pase')) return 0.5;
+    
+    return 1; // Peso por defecto para acciones no categorizadas
+  }
+
+  getMomentosClaveCount(): number {
+    if (!this.acciones_en_vivo) return 0;
+    const tiposClave = ['gol', 'tarjeta roja', 'tarjeta amarilla', 'penal', 'var', 'cambio'];
+    return this.acciones_en_vivo.filter(a => 
+      tiposClave.some(tipo => a.tipo.toLowerCase().includes(tipo))
+    ).length;
+  }
+
+  getMomentosClaveTimeline(): any[] {
+    if (!this.acciones_en_vivo || this.acciones_en_vivo.length === 0) return [];
+    
+    const tiposClave = ['gol', 'tarjeta roja', 'tarjeta amarilla', 'penal', 'var', 'cambio'];
+    const momentosClave = this.acciones_en_vivo
+      .filter(a => tiposClave.some(tipo => a.tipo.toLowerCase().includes(tipo)))
+      .map(accion => {
+        const tipo = accion.tipo.toLowerCase();
+        let tipoMarcador = 'normal';
+        let icono = '⚪';
+        
+        if (tipo.includes('gol')) {
+          tipoMarcador = 'gol';
+          icono = '⚽';
+        } else if (tipo.includes('tarjeta roja')) {
+          tipoMarcador = 'roja';
+          icono = '🟥';
+        } else if (tipo.includes('tarjeta amarilla')) {
+          tipoMarcador = 'amarilla';
+          icono = '🟨';
+        } else if (tipo.includes('penal')) {
+          tipoMarcador = 'penal';
+          icono = '🎯';
+        } else if (tipo.includes('var')) {
+          tipoMarcador = 'var';
+          icono = '📺';
+        } else if (tipo.includes('cambio')) {
+          tipoMarcador = 'cambio';
+          icono = '🔄';
+        }
+        
+        return {
+          minuto: accion.minuto,
+          posicion: (accion.minuto / 90) * 100, // Ahora en base a 90 minutos
+          tipo: tipoMarcador,
+          icono: icono,
+          descripcion: accion.tipo + ' - ' + accion.equipo,
+          offsetY: '50%' // Se ajustará después para evitar superposición
+        };
+      });
+    
+    // Detectar y ajustar marcadores superpuestos (mismo minuto o muy cercanos)
+    const resultado = [];
+    const tolerancia = 1; // Minutos de tolerancia para considerar "superpuestos"
+    
+    for (let i = 0; i < momentosClave.length; i++) {
+      const actual = { ...momentosClave[i] };
+      let offset = 0;
+      
+      // Contar cuántos marcadores previos están en el mismo minuto o muy cerca
+      for (let j = 0; j < i; j++) {
+        if (Math.abs(momentosClave[j].minuto - actual.minuto) <= tolerancia) {
+          offset++;
+        }
+      }
+      
+      // Ajustar posición vertical según el offset
+      if (offset === 0) {
+        actual.offsetY = '50%';
+      } else if (offset === 1) {
+        actual.offsetY = 'calc(50% + 45px)'; // Debajo del primero
+      } else if (offset === 2) {
+        actual.offsetY = 'calc(50% - 45px)'; // Arriba del primero
+      } else {
+        // Para más de 3, alternar arriba y abajo
+        actual.offsetY = offset % 2 === 0 ? `calc(50% - ${45 * Math.floor(offset/2)}px)` : `calc(50% + ${45 * Math.ceil(offset/2)}px)`;
+      }
+      
+      resultado.push(actual);
+    }
+    
+    return resultado;
+  }
+
+  getProgressPercentage(): number {
+    if (!this.minuto_en_vivo) return 0;
+    return Math.min((this.minuto_en_vivo / 90) * 100, 100); // 90 minutos = 100%
+  }
+
+  getHeatmapData(): any[] {
+    if (!this.acciones_en_vivo || this.acciones_en_vivo.length === 0) {
+      return Array(18).fill({ intensidad: 0, nivel: 'baja', acciones: 0, peso: 0 });
+    }
+    
+    // Dividir en 18 períodos de 5 minutos cada uno (90 minutos totales)
+    const periodos = Array(18).fill(0).map(() => ({ count: 0, pesoTotal: 0 }));
+    
+    this.acciones_en_vivo.forEach(accion => {
+      const minuto = accion.minuto || 0;
+      const periodoIndex = Math.min(Math.floor(minuto / 5), 17);
+      periodos[periodoIndex].count++;
+      periodos[periodoIndex].pesoTotal += this.getAccionPeso(accion.tipo);
+    });
+    
+    // Usar el peso total como métrica de intensidad en lugar del conteo
+    const maxPeso = Math.max(...periodos.map(p => p.pesoTotal), 1);
+    
+    return periodos.map(periodo => {
+      const intensidad = (periodo.pesoTotal / maxPeso) * 100;
+      let nivel = 'baja';
+      
+      if (intensidad > 66) nivel = 'alta';
+      else if (intensidad > 33) nivel = 'media';
+      
+      return {
+        intensidad: Math.max(intensidad, 5), // Mínimo 5% para visibilidad
+        nivel: nivel,
+        acciones: periodo.count,
+        peso: periodo.pesoTotal
+      };
+    });
+  }
 }

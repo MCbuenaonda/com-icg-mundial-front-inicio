@@ -440,6 +440,221 @@ body {
   box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3);
 }
 
+/* Intensidad del partido - Timeline y Heatmap */
+.intensity-badge {
+  background: rgba(255, 193, 7, 0.2);
+  padding: 0.3rem 0.8rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  border: 1px solid rgba(255, 193, 7, 0.4);
+  animation: intensityPulse 2s ease-in-out infinite;
+}
+
+@keyframes intensityPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+.timeline-container {
+  margin-top: 0.5rem;
+}
+
+.timeline-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.timeline-bar {
+  position: relative;
+  margin: 1rem 0;
+}
+
+.timeline-track {
+  position: relative;
+  width: 100%;
+  height: 40px;
+  background: linear-gradient(90deg, rgba(35, 42, 58, 0.6), rgba(44, 52, 70, 0.6));
+  border-radius: 20px;
+  overflow: visible;
+  border: 2px solid rgba(255, 193, 7, 0.2);
+}
+
+.timeline-progress {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  background: linear-gradient(90deg, rgba(255, 193, 7, 0.3), rgba(255, 237, 74, 0.2));
+  border-radius: 20px;
+  transition: width 0.5s ease;
+  border-right: 3px solid #ffc107;
+}
+
+.timeline-marker {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  z-index: 2;
+}
+
+.timeline-marker:hover {
+  transform: translate(-50%, -50%) scale(1.3);
+  z-index: 3;
+}
+
+.timeline-marker:hover .marker-minute {
+  opacity: 1;
+  transform: translateY(-45px);
+}
+
+.marker-icon {
+  font-size: 1.2rem;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+}
+
+.marker-minute {
+  position: absolute;
+  top: -35px;
+  background: rgba(0, 0, 0, 0.8);
+  color: #ffd700;
+  padding: 0.2rem 0.5rem;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  white-space: nowrap;
+  opacity: 0;
+  transition: all 0.3s ease;
+  pointer-events: none;
+}
+
+.marker-gol {
+  background: radial-gradient(circle, rgba(76, 175, 80, 0.4), rgba(76, 175, 80, 0.8));
+  border: 3px solid #4caf50;
+  box-shadow: 0 0 15px rgba(76, 175, 80, 0.6);
+  animation: markerPulse 1.5s ease-in-out infinite;
+}
+
+.marker-roja {
+  background: radial-gradient(circle, rgba(244, 67, 54, 0.4), rgba(244, 67, 54, 0.8));
+  border: 3px solid #f44336;
+  box-shadow: 0 0 15px rgba(244, 67, 54, 0.6);
+}
+
+.marker-amarilla {
+  background: radial-gradient(circle, rgba(255, 193, 7, 0.4), rgba(255, 193, 7, 0.8));
+  border: 3px solid #ffc107;
+  box-shadow: 0 0 15px rgba(255, 193, 7, 0.6);
+}
+
+.marker-var {
+  background: radial-gradient(circle, rgba(33, 150, 243, 0.4), rgba(33, 150, 243, 0.8));
+  border: 3px solid #2196f3;
+  box-shadow: 0 0 15px rgba(33, 150, 243, 0.6);
+}
+
+.marker-penal {
+  background: radial-gradient(circle, rgba(156, 39, 176, 0.4), rgba(156, 39, 176, 0.8));
+  border: 3px solid #9c27b0;
+  box-shadow: 0 0 15px rgba(156, 39, 176, 0.6);
+}
+
+.marker-cambio {
+  background: radial-gradient(circle, rgba(76, 175, 80, 0.3), rgba(76, 175, 80, 0.7));
+  border: 3px solid #66bb6a;
+  box-shadow: 0 0 15px rgba(76, 175, 80, 0.5);
+}
+
+@keyframes markerPulse {
+  0%, 100% {
+    transform: translate(-50%, -50%) scale(1);
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.15);
+  }
+}
+
+/* Mapa de calor */
+.heatmap-container {
+  padding: 0.5rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 10px;
+}
+
+.half-section {
+  padding: 0.5rem;
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 8px;
+}
+
+.half-label {
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.heatmap-bars {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  height: 60px;
+  gap: 4px;
+  padding: 0 5px;
+}
+
+.heatmap-bar {
+  flex: 1;
+  min-height: 5px;
+  border-radius: 4px 4px 0 0;
+  transition: all 0.5s ease;
+  cursor: pointer;
+  position: relative;
+}
+
+.heatmap-bar:hover {
+  transform: scaleY(1.1);
+  filter: brightness(1.3);
+}
+
+.intensity-baja {
+  background: linear-gradient(180deg, rgba(76, 175, 80, 0.3), rgba(76, 175, 80, 0.6));
+  box-shadow: 0 -2px 8px rgba(76, 175, 80, 0.3);
+}
+
+.intensity-media {
+  background: linear-gradient(180deg, rgba(255, 193, 7, 0.4), rgba(255, 193, 7, 0.8));
+  box-shadow: 0 -2px 8px rgba(255, 193, 7, 0.4);
+}
+
+.intensity-alta {
+  background: linear-gradient(180deg, rgba(244, 67, 54, 0.4), rgba(244, 67, 54, 0.9));
+  box-shadow: 0 -2px 8px rgba(244, 67, 54, 0.5);
+  animation: heatPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes heatPulse {
+  0%, 100% {
+    filter: brightness(1);
+  }
+  50% {
+    filter: brightness(1.3);
+  }
+}
+
+.heatmap-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 0.3rem;
+  padding: 0 5px;
+}
+
 /* Botón flotante scroll to top */
 .scroll-to-top-btn {
   position: fixed;

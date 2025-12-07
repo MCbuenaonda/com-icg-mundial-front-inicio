@@ -2,11 +2,90 @@
 <div class="row g-4 mb-4">
 	<div class="col-12 col-md-5">
 		<div class="card h-100">
-			<div class="card-header bg-info text-white">Estado del Torneo</div>
-			<div class="card-body">
-				<div><strong>Fase Actual:</strong> {{ currentPhase }}</div>
-				<div><strong>Países Clasificados:</strong> {{ qualifiedCount }}</div>
-				<div><strong>Próximo Evento:</strong> {{ nextEvent }}</div>
+			<div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+				<span>Intensidad del Partido</span>
+				<span class="intensity-badge">{{ getIntensidadActual() }}</span>
+			</div>
+			<div class="card-body p-3">
+				<div class="mb-3">
+					<strong class="text-light">Fase Actual:</strong> <span class="text-warning">{{ currentPhase }}</span>
+				</div>
+				
+				<!-- Timeline de momentos clave -->
+				<div class="timeline-container" *ngIf="liveMatch && detalle_en_curso">
+					<div class="timeline-header mb-2">
+						<span class="text-light fw-bold">Momentos Clave</span>
+						<span class="text-warning small">{{ getMomentosClaveCount() }} eventos</span>
+					</div>
+					
+					<!-- Línea de tiempo visual -->
+					<div class="timeline-bar">
+						<div class="timeline-track">
+							<div class="timeline-progress" [style.width.%]="getProgressPercentage()"></div>
+							
+							<!-- Marcadores de eventos -->
+							<div 
+								*ngFor="let evento of getMomentosClaveTimeline()" 
+								class="timeline-marker animate__animated animate__zoomIn"
+								[style.left.%]="evento.posicion"
+								[style.top]="evento.offsetY"
+								[ngClass]="'marker-' + evento.tipo"
+								[title]="evento.minuto + '\' - ' + evento.descripcion">
+								<span class="marker-icon">{{ evento.icono }}</span>
+								<span class="marker-minute">{{ evento.minuto }}'</span>
+							</div>
+						</div>
+					</div>
+					
+					<!-- Mapa de calor por períodos -->
+					<div class="heatmap-container mt-3">
+						<div class="heatmap-label text-light small mb-1">Intensidad del Partido (90 min)</div>
+						
+						<!-- Primer Tiempo -->
+						<div class="half-section mb-2">
+							<div class="half-label text-warning small mb-1">1er Tiempo</div>
+							<div class="heatmap-bars">
+								<div 
+									*ngFor="let periodo of getHeatmapData().slice(0, 9); let i = index" 
+									class="heatmap-bar"
+									[style.height.%]="periodo.intensidad"
+									[ngClass]="'intensity-' + periodo.nivel"
+									[title]="'Min ' + (i*5) + '-' + ((i+1)*5) + ': ' + periodo.acciones + ' acciones (Peso: ' + periodo.peso.toFixed(1) + ')'">
+								</div>
+							</div>
+							<div class="heatmap-labels">
+								<span class="small text-muted">0'</span>
+								<span class="small text-muted">20'</span>
+								<span class="small text-muted">45'</span>
+							</div>
+						</div>
+						
+						<!-- Segundo Tiempo -->
+						<div class="half-section">
+							<div class="half-label text-warning small mb-1">2do Tiempo</div>
+							<div class="heatmap-bars">
+								<div 
+									*ngFor="let periodo of getHeatmapData().slice(9, 18); let i = index" 
+									class="heatmap-bar"
+									[style.height.%]="periodo.intensidad"
+									[ngClass]="'intensity-' + periodo.nivel"
+									[title]="'Min ' + ((i+9)*5) + '-' + ((i+10)*5) + ': ' + periodo.acciones + ' acciones (Peso: ' + periodo.peso.toFixed(1) + ')'">
+								</div>
+							</div>
+							<div class="heatmap-labels">
+								<span class="small text-muted">45'</span>
+								<span class="small text-muted">67'</span>
+								<span class="small text-muted">90'</span>
+							</div>
+						</div>
+					</div>
+				</div>
+				
+				<!-- Mensaje cuando no hay partido en vivo -->
+				<div *ngIf="!liveMatch" class="text-center text-muted py-3">
+					<div class="mb-2">📊</div>
+					<small>No hay partido en curso</small>
+				</div>
 			</div>
 		</div>
 	</div>
