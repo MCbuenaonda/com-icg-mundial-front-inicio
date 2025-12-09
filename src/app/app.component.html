@@ -44,15 +44,20 @@
 						<!-- Primer Tiempo -->
 						<div class="half-section mb-2">
 							<div class="half-label text-warning small mb-1">1er Tiempo</div>
-							<div class="heatmap-bars">
-								<div 
-									*ngFor="let periodo of getHeatmapData().slice(0, 9); let i = index" 
-									class="heatmap-bar"
-									[style.height.%]="periodo.intensidad"
-									[ngClass]="'intensity-' + periodo.nivel"
-									[title]="'Min ' + (i*5) + '-' + ((i+1)*5) + ': ' + periodo.acciones + ' acciones (Peso: ' + periodo.peso.toFixed(1) + ')'">
-								</div>
+						<div class="heatmap-bars">
+							<div 
+								*ngFor="let periodo of getHeatmapData().slice(0, 9); let i = index" 
+								class="heatmap-bar"
+								[style.height.%]="periodo.intensidad"
+								[ngClass]="'intensity-' + periodo.nivel"
+								[title]="'Min ' + (i*5) + '-' + ((i+1)*5) + ': ' + periodo.acciones + ' acciones (Peso: ' + periodo.peso.toFixed(1) + ')' + (periodo.equipoDestacado ? ' - Destacado: ' + periodo.equipoDestacado : '')">
+								<img 
+									*ngIf="periodo.equipoDestacado" 
+									[src]="getIconoUrl(periodo.equipoDestacado)" 
+									[alt]="periodo.equipoDestacado"
+									class="heatmap-icon">
 							</div>
+						</div>
 							<div class="heatmap-labels">
 								<span class="small text-muted">0'</span>
 								<span class="small text-muted">20'</span>
@@ -63,15 +68,20 @@
 						<!-- Segundo Tiempo -->
 						<div class="half-section">
 							<div class="half-label text-warning small mb-1">2do Tiempo</div>
-							<div class="heatmap-bars">
-								<div 
-									*ngFor="let periodo of getHeatmapData().slice(9, 18); let i = index" 
-									class="heatmap-bar"
-									[style.height.%]="periodo.intensidad"
-									[ngClass]="'intensity-' + periodo.nivel"
-									[title]="'Min ' + ((i+9)*5) + '-' + ((i+10)*5) + ': ' + periodo.acciones + ' acciones (Peso: ' + periodo.peso.toFixed(1) + ')'">
-								</div>
+						<div class="heatmap-bars">
+							<div 
+								*ngFor="let periodo of getHeatmapData().slice(9, 18); let i = index" 
+								class="heatmap-bar"
+								[style.height.%]="periodo.intensidad"
+								[ngClass]="'intensity-' + periodo.nivel"
+								[title]="'Min ' + ((i+9)*5) + '-' + ((i+10)*5) + ': ' + periodo.acciones + ' acciones (Peso: ' + periodo.peso.toFixed(1) + ')' + (periodo.equipoDestacado ? ' - Destacado: ' + periodo.equipoDestacado : '')">
+								<img 
+									*ngIf="periodo.equipoDestacado" 
+									[src]="getIconoUrl(periodo.equipoDestacado)" 
+									[alt]="periodo.equipoDestacado"
+									class="heatmap-icon">
 							</div>
+						</div>
 							<div class="heatmap-labels">
 								<span class="small text-muted">45'</span>
 								<span class="small text-muted">67'</span>
@@ -179,13 +189,13 @@
         </div>
 				<div class="d-flex justify-content-between align-items-center">
 					<div class="d-flex align-items-center">
-						<img [src]="getBanderaUrl(liveMatch.equipo_local.iso)" alt="{{ liveMatch.equipo_local.nombre }}" height="32" class="flag-img">
+						<img [src]="getEscudoUrl(liveMatch.equipo_local.nombre)" alt="{{ liveMatch.equipo_local.nombre }}" height="50" class="escudo-img">
 						<span class="mx-2 fw-bold">{{ liveMatch.equipo_local.nombre }}</span>
 					</div>
             <div class="fs-4 fw-bold">{{ detalle_en_curso.goles_local }} - {{ detalle_en_curso.goles_visitante }}</div>
             <div class="d-flex align-items-center">
               <span class="mx-2 fw-bold">{{ liveMatch.equipo_visitante.nombre }}</span>
-              <img [src]="getBanderaUrl(liveMatch.equipo_visitante.iso)" alt="{{ liveMatch.equipo_visitante.nombre }}" height="32" class="flag-img">
+              <img [src]="getEscudoUrl(liveMatch.equipo_visitante.nombre)" alt="{{ liveMatch.equipo_visitante.nombre }}" height="50" class="escudo-img">
             </div>
 				</div>
 
@@ -201,8 +211,9 @@
                 
                 <div class="accion-contenido">
                   <div class="accion-header">
+                    <img [src]="getJerseyUrl(accion.equipo)" alt="{{ accion.equipo }}" class="jersey-img" onerror="this.style.display='none'">
                     <span class="accion-tipo" [ngClass]="'tipo-' + getTipoClass(accion.tipo)">
-                      {{ getTipoIcon(accion.tipo) }} {{ accion.tipo }} de 
+                      {{ getTipoIcon(accion.tipo) }} {{ accion.tipo }}
                     </span>
                     <span class="accion-equipo">{{ accion.equipo }}</span>
                   </div>                  

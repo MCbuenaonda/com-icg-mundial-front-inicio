@@ -187,6 +187,21 @@ export class AppComponent implements OnInit {
     return `https://flagcdn.com/w40/${iso.toLowerCase()}.png`;
   }
 
+  getEscudoUrl(nombrePais: string): string {
+    // URL de Firebase Storage para escudos
+    return `https://storage.googleapis.com/com-icg-mundial/escudo/${nombrePais}.png`;
+  }
+
+  getJerseyUrl(nombrePais: string): string {
+    // URL de Firebase Storage para jerseys
+    return `https://storage.googleapis.com/com-icg-mundial/jersey/${nombrePais}.png`;
+  }
+
+  getIconoUrl(nombrePais: string): string {
+    // URL de Firebase Storage para iconos
+    return `https://storage.googleapis.com/com-icg-mundial/escudo/${nombrePais}.png`;
+  }
+
   cargarDetallesPartido(_id: string): void {
     this.apiService.verPartido(_id).subscribe({
       next: (data: Partido) => {
@@ -647,17 +662,32 @@ export class AppComponent implements OnInit {
 
   getHeatmapData(): any[] {
     if (!this.acciones_en_vivo || this.acciones_en_vivo.length === 0) {
-      return Array(18).fill({ intensidad: 0, nivel: 'baja', acciones: 0, peso: 0 });
+      return Array(18).fill({ intensidad: 0, nivel: 'baja', acciones: 0, peso: 0, equipoDestacado: null });
     }
     
     // Dividir en 18 períodos de 5 minutos cada uno (90 minutos totales)
-    const periodos = Array(18).fill(0).map(() => ({ count: 0, pesoTotal: 0 }));
+    const periodos = Array(18).fill(0).map(() => ({ 
+      count: 0, 
+      pesoTotal: 0,
+      equipos: {} as { [key: string]: number } // Peso por equipo
+    }));
     
     this.acciones_en_vivo.forEach(accion => {
       const minuto = accion.minuto || 0;
       const periodoIndex = Math.min(Math.floor(minuto / 5), 17);
+      const peso = this.getAccionPeso(accion.tipo);
+      
       periodos[periodoIndex].count++;
-      periodos[periodoIndex].pesoTotal += this.getAccionPeso(accion.tipo);
+      periodos[periodoIndex].pesoTotal += peso;
+      
+      // Acumular peso por equipo
+      const equipo = accion.equipo;
+      if (equipo) {
+        if (!periodos[periodoIndex].equipos[equipo]) {
+          periodos[periodoIndex].equipos[equipo] = 0;
+        }
+        periodos[periodoIndex].equipos[equipo] += peso;
+      }
     });
     
     // Usar el peso total como métrica de intensidad en lugar del conteo
@@ -670,11 +700,23 @@ export class AppComponent implements OnInit {
       if (intensidad > 66) nivel = 'alta';
       else if (intensidad > 33) nivel = 'media';
       
+      // Encontrar el equipo con mayor peso en este período
+      let equipoDestacado = null;
+      let maxPesoEquipo = 0;
+      
+      for (const equipo in periodo.equipos) {
+        if (periodo.equipos[equipo] > maxPesoEquipo) {
+          maxPesoEquipo = periodo.equipos[equipo];
+          equipoDestacado = equipo;
+        }
+      }
+      
       return {
         intensidad: Math.max(intensidad, 5), // Mínimo 5% para visibilidad
         nivel: nivel,
         acciones: periodo.count,
-        peso: periodo.pesoTotal
+        peso: periodo.pesoTotal,
+        equipoDestacado: equipoDestacado // Equipo con más peso en el período
       };
     });
   }
